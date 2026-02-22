@@ -1,0 +1,66 @@
+{
+    "draft": {
+        "yourTeam": "Your Team",
+        "enemyTeam": "Enemy Team",
+        "bans": "Bans",
+        "addBan": "+ Ban",
+        "addHero": "Add Hero",
+        "suggestions": "Suggested Counterpicks",
+        "noSuggestions": "Pick enemy heroes to get suggestions",
+        "loadingHeroes": "Loading heroes...",
+        "confidence": {
+            "High": "High",
+            "Moderate": "Moderate",
+            "Low": "Low"
+        },
+        "roles": {
+            "carry": "Carry",
+            "mid": "Mid",
+            "offlane": "Offlane",
+            "soft_support": "Soft Support",
+            "hard_support": "Hard Support",
+            "unknown": "Role?"
+        }
+    },
+    "settings": {
+        "gameMode": "Game Mode",
+        "bracket": "MMR Bracket",
+        "region": "Region",
+        "language": "Language",
+        "ranked": "Ranked All Pick",
+        "cm": "Captains Mode",
+        "turbo": "Turbo",
+        "brackets": {
+            "herald": "Herald",
+            "guardian": "Guardian",
+            "crusader": "Crusader",
+            "archon": "Archon",
+            "legend": "Legend",
+            "ancient": "Ancient",
+            "divine": "Divine",
+            "immortal": "Immortal"
+        },
+        "regions": {
+            "SEA": "Southeast Asia",
+            "CN": "China",
+            "EU": "Europe",
+            "NA": "North America",
+            "SA": "South America",
+            "EEU": "Eastern Europe",
+            "ME": "Middle East"
+        }
+    },
+    "search": {
+        "placeholder": "Search hero name or alias...",
+        "noResults": "No heroes found"
+    },
+    "meta": {
+        "patch": "Patch",
+        "lastUpdated": "Last updated"
+    },
+    "app": {
+        "name": "Aegis Pick",
+        "tagline": "Dota 2 Counterpick Assistant",
+        "reset": "Reset Draft"
+    }
+}
