@@ -51,16 +51,30 @@ function lsSet<T>(key: string, data: T): void {
  * Avoids re-fetching on every page visit since heroes change ~4x/year.
  */
 export async function fetchHeroes(): Promise<Record<string, unknown>[]> {
-    const cached = lsGet<Record<string, unknown>[]>('aegis:heroes');
+    const cached = lsGet<Record<string, unknown>[]>('aegis:heroes:v5');
     if (cached) return cached;
 
-    const res = await fetch(`${BACKEND_URL}/api/heroes`, {
-        // Next.js ISR revalidation as secondary cache if running server-side
-        next: { revalidate: 86400 },
-    });
+    const res = await fetch(`${BACKEND_URL}/api/heroes?t=${Date.now()}`);
     if (!res.ok) throw new Error('Failed to fetch heroes');
-    const data = await res.json();
-    lsSet('aegis:heroes', data);
+    let data: Record<string, unknown>[] = await res.json();
+
+    // OpenDota returns relative paths for images (e.g. "/apps/dota2/images...") or trailing '?'
+    // Prefix them and clean them so Next.js Image component works flawlessly.
+    data = data.map(hero => {
+        let imgPath = hero.img as string;
+        if (typeof imgPath === 'string') {
+            if (imgPath.startsWith('/')) {
+                imgPath = `https://cdn.cloudflare.steamstatic.com${imgPath}`;
+            }
+            if (imgPath.endsWith('?')) {
+                imgPath = imgPath.slice(0, -1);
+            }
+        }
+        return { ...hero, img: imgPath };
+    });
+
+    console.log('Mapped hero 0:', data[0].localized_name, data[0].img);
+    lsSet('aegis:heroes:v5', data);
     return data;
 }
 
@@ -75,7 +89,7 @@ export type FacetMap = Record<string, HeroFacet[]>;
  * Facets change only when a hero is added or reworked (~4x/year).
  */
 export async function fetchFacets(): Promise<FacetMap> {
-    const cached = lsGet<FacetMap>('aegis:facets');
+    const cached = lsGet<FacetMap>('aegis:facets:v2');
     if (cached) return cached;
 
     const res = await fetch(`${BACKEND_URL}/api/facets`, {
@@ -83,7 +97,7 @@ export async function fetchFacets(): Promise<FacetMap> {
     });
     if (!res.ok) throw new Error('Failed to fetch facets');
     const data = await res.json();
-    lsSet('aegis:facets', data);
+    lsSet('aegis:facets:v2', data);
     return data;
 }
 
@@ -114,6 +128,24 @@ export async function fetchSuggestions(params: SuggestionParams) {
         cache: 'no-store',
     });
     if (!res.ok) throw new Error('Failed to fetch suggestions');
+    return res.json();
+}
+
+export interface EvaluateParams {
+    ally_ids: number[];
+    enemy_ids: number[];
+    game_mode: string;
+    region: string;
+}
+
+export async function fetchEvaluation(params: EvaluateParams): Promise<{ win_probability: number }> {
+    const res = await fetch(`${BACKEND_URL}/api/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Failed to evaluate draft');
     return res.json();
 }
 

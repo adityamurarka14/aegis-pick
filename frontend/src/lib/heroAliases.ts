@@ -124,7 +124,11 @@ export function searchHeroes<T extends { localized_name: string; id: number }>(
     excludeIds: number[] = []
 ): T[] {
     const q = query.toLowerCase().trim();
-    if (!q) return heroes.filter((h) => !excludeIds.includes(h.id));
+    if (!q) {
+        return heroes
+            .filter((h) => !excludeIds.includes(h.id))
+            .sort((a, b) => a.localized_name.localeCompare(b.localized_name));
+    }
 
     return heroes
         .filter((h) => {
@@ -139,6 +143,7 @@ export function searchHeroes<T extends { localized_name: string; id: number }>(
         .sort((a, b) => {
             const aExact = a.localized_name.toLowerCase() === q ? 1 : 0;
             const bExact = b.localized_name.toLowerCase() === q ? 1 : 0;
-            return bExact - aExact;
+            if (bExact !== aExact) return bExact - aExact;
+            return a.localized_name.localeCompare(b.localized_name);
         });
 }

@@ -1,12 +1,25 @@
 import { create } from 'zustand';
 
+/** 
+ * Game modes available for draft evaluation. 
+ */
 export type GameMode = 'ranked' | 'cm' | 'turbo';
+
+/** 
+ * Skill brackets used to contextualize hero winrates. 
+ */
 export type Bracket =
     | 'herald' | 'guardian' | 'crusader' | 'archon'
     | 'legend' | 'ancient' | 'divine' | 'immortal';
-export type Region = 'SEA' | 'CN' | 'EU' | 'NA' | 'SA' | 'EEU' | 'ME';
-export type Role = 'carry' | 'mid' | 'offlane' | 'soft_support' | 'hard_support' | null;
 
+/** 
+ * Server regions for geographically specific matchmaking data. 
+ */
+export type Region = 'SEA' | 'CN' | 'EU' | 'NA' | 'SA' | 'EEU' | 'ME';
+
+/** 
+ * Represents a Dota 2 Hero entity in the draft.
+ */
 export interface Hero {
     id: number;
     localized_name: string;
@@ -24,10 +37,15 @@ export interface HeroFacet {
     icon?: string;
 }
 
+/** 
+ * Defines a counterpick suggestion returned by the backend.
+ * Includes ranking scores and specific reasoning.
+ */
 export interface Suggestion {
     id: number;
     localized_name: string;
     img: string;
+    primary_attr: string;
     score: number;
     confidence_value: number;
     confidence_label: 'High' | 'Moderate' | 'Low';
@@ -35,9 +53,11 @@ export interface Suggestion {
     facet_note?: string;  // optional kit-changing facet note from backend
 }
 
+/** 
+ * Represents a slot in the draft with an optional hero and their selected facet.
+ */
 export interface HeroSlot {
     hero: Hero | null;
-    role: Role;
     /**
      * facetId: which facet index (0-based) the hero is running.
      * Defaults to 0 (first facet, the game's default).
@@ -46,6 +66,9 @@ export interface HeroSlot {
     facetId: number;
 }
 
+/**
+ * Global application state for tracking draft progress, settings, and API results.
+ */
 interface DraftState {
     // Settings
     gameMode: GameMode;
@@ -62,6 +85,9 @@ interface DraftState {
     suggestions: Suggestion[];
     isFetching: boolean;
 
+    // Evaluation
+    winProbability: number | null;
+
     // Hero search modal
     searchOpen: boolean;
     searchTarget: { side: 'ally' | 'enemy' | 'ban'; slotIdx: number } | null;
@@ -77,7 +103,6 @@ interface DraftState {
     pickHero: (hero: Hero) => void;
     removeAllyHero: (idx: number) => void;
     removeEnemyHero: (idx: number) => void;
-    setAllyRole: (idx: number, role: Role) => void;
     setAllyFacet: (idx: number, facetId: number) => void;
     setEnemyFacet: (idx: number, facetId: number) => void;
     addBan: (hero: Hero) => void;
@@ -85,13 +110,24 @@ interface DraftState {
 
     setSuggestions: (s: Suggestion[]) => void;
     setFetching: (v: boolean) => void;
+    setWinProbability: (p: number | null) => void;
+
+    swapSlots: (side: 'ally' | 'enemy', fromIdx: number, toIdx: number) => void;
+    /** Replace a specific slot with a suggested hero. */
+    assignSuggestion: (hero: Hero, toIdx: number) => void;
+    /** Instantly assign a suggested hero to the appropriate slot. */
+    addSuggestion: (hero: Hero, attrGroup?: string) => void;
 
     resetDraft: () => void;
 }
 
+/** Helper to initialize a clean draft slot array. */
 const makeSlots = (n: number): HeroSlot[] =>
-    Array.from({ length: n }, () => ({ hero: null, role: null, facetId: 0 }));
+    Array.from({ length: n }, () => ({ hero: null, facetId: 0 }));
 
+/**
+ * Zustand store holding the entire global UI and Draft state.
+ */
 export const useDraftStore = create<DraftState>((set, get) => ({
     gameMode: 'ranked',
     bracket: 'immortal',
@@ -104,6 +140,7 @@ export const useDraftStore = create<DraftState>((set, get) => ({
 
     suggestions: [],
     isFetching: false,
+    winProbability: null,
 
     searchOpen: false,
     searchTarget: null,
@@ -148,20 +185,14 @@ export const useDraftStore = create<DraftState>((set, get) => ({
 
     removeAllyHero: (idx) => {
         const updated = [...get().allySlots];
-        updated[idx] = { hero: null, role: null, facetId: 0 };
+        updated[idx] = { hero: null, facetId: 0 };
         set({ allySlots: updated });
     },
 
     removeEnemyHero: (idx) => {
         const updated = [...get().enemySlots];
-        updated[idx] = { hero: null, role: null, facetId: 0 };
+        updated[idx] = { hero: null, facetId: 0 };
         set({ enemySlots: updated });
-    },
-
-    setAllyRole: (idx, role) => {
-        const updated = [...get().allySlots];
-        updated[idx] = { ...updated[idx], role };
-        set({ allySlots: updated });
     },
 
     setAllyFacet: (idx, facetId) => {
@@ -188,6 +219,45 @@ export const useDraftStore = create<DraftState>((set, get) => ({
 
     setSuggestions: (s) => set({ suggestions: s }),
     setFetching: (v) => set({ isFetching: v }),
+    setWinProbability: (p) => set({ winProbability: p }),
+
+    swapSlots: (side, fromIdx, toIdx) => {
+        const slotsName = side === 'ally' ? 'allySlots' : 'enemySlots';
+        const slots = [...get()[slotsName]];
+        const temp = slots[fromIdx];
+        slots[fromIdx] = slots[toIdx];
+        slots[toIdx] = temp;
+        set({ [slotsName]: slots } as Partial<DraftState>);
+    },
+
+    assignSuggestion: (hero, toIdx) => {
+        const updated = [...get().allySlots];
+        updated[toIdx] = { hero, facetId: 0 };
+        set({ allySlots: updated });
+    },
+
+    addSuggestion: (hero, attrGroup) => {
+        const state = get();
+        let targetIdx = state.allySlots.findIndex(s => !s.hero);
+        if (targetIdx === -1) targetIdx = 0;
+
+        if (attrGroup === 'agi') {
+            targetIdx = 0;
+        } else if (attrGroup === 'all') {
+            targetIdx = 1;
+        } else if (attrGroup === 'str') {
+            targetIdx = 2;
+        } else if (attrGroup === 'int') {
+            // For Support (Pos 4/5), check if Pos 4 is taken but Pos 5 is free
+            if (state.allySlots[3].hero && !state.allySlots[4].hero) {
+                targetIdx = 4;
+            } else {
+                targetIdx = 3;
+            }
+        }
+
+        state.assignSuggestion(hero, targetIdx);
+    },
 
     resetDraft: () =>
         set({
@@ -195,5 +265,6 @@ export const useDraftStore = create<DraftState>((set, get) => ({
             enemySlots: makeSlots(5),
             bannedHeroes: [],
             suggestions: [],
+            winProbability: null,
         }),
 }));

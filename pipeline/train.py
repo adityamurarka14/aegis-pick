@@ -165,8 +165,8 @@ def fetch_heroes(force: bool = False) -> list[dict]:
             "id": h["id"],
             "localized_name": h.get("localized_name", ""),
             "primary_attr": h.get("primary_attr", "agi"),
-            "img": f"https://cdn.cloudflare.steamstatic.com{h.get('img', '')}",
-            "icon": f"https://cdn.cloudflare.steamstatic.com{h.get('icon', '')}",
+            "img": f"https://cdn.cloudflare.steamstatic.com{s.get('img', '')}",
+            "icon": f"https://cdn.cloudflare.steamstatic.com{s.get('icon', '')}",
             "attack_type": h.get("attack_type", "Melee"),
             # win rates per bracket from heroStats (1=herald … 8=immortal)
             **{f"{b}_{k}": s.get(f"{b}_{k}", 0 if k == "win" else 1)
