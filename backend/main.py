@@ -33,7 +33,6 @@ ALLOWED_ORIGINS = [
     "https://aegis-pick.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
-    "*",  # Remove "*" in production and list domains explicitly
 ]
 
 app.add_middleware(
