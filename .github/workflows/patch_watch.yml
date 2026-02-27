@@ -8,15 +8,19 @@ on:
 jobs:
   patch_check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install pipeline deps
-        run: pip install -r pipeline/requirements.txt
+        run: pip install --upgrade pip && pip install -r pipeline/requirements.txt
 
       - name: Check for new patch and retrain if needed
         run: python pipeline/patch_watch.py
