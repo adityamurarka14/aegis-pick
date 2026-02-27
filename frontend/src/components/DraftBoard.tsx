@@ -77,7 +77,7 @@ function HeroSlotCard({
         <div
             className={`group flex flex-col items-center justify-center rounded-[10px] border border-white/10 relative overflow-visible cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-1 hover:scale-[102%] z-10 hover:z-20 ${side === 'ally' ? 'hover:shadow-[0_10px_25px_-5px_rgba(59,130,246,0.25),0_0_15px_rgba(59,130,246,0.25)]' : 'hover:shadow-[0_10px_25px_-5px_rgba(239,68,68,0.25),0_0_15px_rgba(239,68,68,0.25)]'}`}
             style={{
-                width: 90, height: 105,
+                width: 145, height: 120,
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
                 backdropFilter: 'blur(10px)'
             }}
@@ -102,7 +102,7 @@ function HeroSlotCard({
 
                     {/* Hover Overlay - Click entire area to remove */}
                     <div
-                        className="absolute inset-0 bg-red-900/80 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer rounded-lg z-30"
+                        className="absolute inset-0 bg-red-900/80 backdrop-blur-sm opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer rounded-lg"
                         onClick={handleRemove}
                         title="Remove Hero"
                     >
@@ -121,7 +121,7 @@ function HeroSlotCard({
                                 bottom: '-26px',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
-                                zIndex: 20,
+                                zIndex: 120,
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -152,8 +152,8 @@ function TeamGrid({ side, label, allFacets }: { side: Side; label: string; allFa
     const isAlly = side === 'ally';
 
     return (
-        <div className="flex-1 flex flex-col relative overflow-hidden rounded-[24px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-colors hover:border-white/20 p-10 md:p-12"
-            style={{ background: 'rgba(15, 20, 35, 0.4)', backdropFilter: 'blur(20px)', padding: '10px', borderRadius: '10px' }}>
+        <div className="flex-1 flex flex-col relative overflow-visible rounded-[24px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] transition-colors hover:border-white/20 p-10 md:p-12"
+            style={{ background: 'rgba(15, 20, 35, 0.4)', backdropFilter: 'blur(20px)', padding: '10px', borderRadius: '10px', height: '100%' }}>
             {/* Subtle background glow for the team grid */}
             <div className="absolute top-0 opacity-20 pointer-events-none"
                 style={{

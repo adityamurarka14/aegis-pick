@@ -152,7 +152,9 @@ export default function DraftPage() {
       <main className="max-w-[1400px] w-full mx-auto px-6 py-12 xl:px-12 xl:py-16 flex flex-col gap-8 lg:gap-12 relative z-10">
         <GameModeSelector />
         <BanRow />
-        <DraftBoard allFacets={allFacets} />
+        <div style={{ position: 'relative', zIndex: 20 }}>
+          <DraftBoard allFacets={allFacets} />
+        </div>
         <div className="mt-4">
           <SuggestionPanel
             suggestions={suggestions}

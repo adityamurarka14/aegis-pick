@@ -99,10 +99,9 @@ export default function FacetPicker({ facets, selectedFacetId, onChange }: Facet
                     aria-label="Select facet"
                     style={{
                         position: 'absolute',
-                        bottom: 'calc(100% + 6px)',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        zIndex: 100,
+                        zIndex: 9999,
                         width: '220px',
                         background: '#141a24',
                         border: '1px solid rgba(255,255,255,0.12)',
