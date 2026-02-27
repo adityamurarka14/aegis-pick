@@ -51,8 +51,8 @@ function lsSet<T>(key: string, data: T): void {
  * Avoids re-fetching on every page visit since heroes change ~4x/year.
  */
 export async function fetchHeroes(): Promise<Record<string, unknown>[]> {
-    const cached = lsGet<Record<string, unknown>[]>('aegis:heroes:v5');
-    if (cached) return cached;
+    const cached = lsGet<Record<string, unknown>[]>('aegis:heroes:v6');
+    if (cached && cached.length > 0) return cached;
 
     const res = await fetch(`${BACKEND_URL}/api/heroes?t=${Date.now()}`);
     if (!res.ok) throw new Error('Failed to fetch heroes');
@@ -74,7 +74,7 @@ export async function fetchHeroes(): Promise<Record<string, unknown>[]> {
     });
 
     console.log('Mapped hero 0:', data[0].localized_name, data[0].img);
-    lsSet('aegis:heroes:v5', data);
+    if (data.length > 0) lsSet('aegis:heroes:v6', data);
     return data;
 }
 
@@ -89,15 +89,15 @@ export type FacetMap = Record<string, HeroFacet[]>;
  * Facets change only when a hero is added or reworked (~4x/year).
  */
 export async function fetchFacets(): Promise<FacetMap> {
-    const cached = lsGet<FacetMap>('aegis:facets:v2');
-    if (cached) return cached;
+    const cached = lsGet<FacetMap>('aegis:facets:v3');
+    if (cached && Object.keys(cached).length > 0) return cached;
 
     const res = await fetch(`${BACKEND_URL}/api/facets`, {
         next: { revalidate: 86400 },
     });
     if (!res.ok) throw new Error('Failed to fetch facets');
     const data = await res.json();
-    lsSet('aegis:facets:v2', data);
+    if (Object.keys(data).length > 0) lsSet('aegis:facets:v3', data);
     return data;
 }
 
